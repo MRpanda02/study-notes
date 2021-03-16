@@ -486,7 +486,7 @@ enum CarColor{red = 7,white,black,blie = 6,green,yellow};
 //red:7,while:8,black:9,blue:6,green:7,yellow:8
 ```
 
-8. ## 用typedef定义类型
+## 8. 用typedef定义类型
 
 使用typedef关键字，可以给类型的名字起别名，此后别名就和类型名代表同一种类型了，具体用法：
 
