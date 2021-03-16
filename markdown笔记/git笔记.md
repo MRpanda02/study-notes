@@ -40,7 +40,7 @@ git reset --hard HEAD (当前版本是HEAD,上一个版本是HEAD^,以此类推�
 
     11. git rm 从版本库中删除文件，但是可用git checkout -- 文件名 
 
-    12. 要关联一个远程库（github),使用命令 git remote add <origin> git@server-name(github.com):githubname/reponame.git
+    12. 要关联一个远程库（github),使用命令 git remote add <origin> git@server-name(github.com):githubname/reponame.git(无反应)
 
         1. git push -u <origin> master 第一次推送master分支的所有内容
         2. 之后 git push <origin>/远程库名称 master 推送最新修改
@@ -50,85 +50,80 @@ git reset --hard HEAD (当前版本是HEAD,上一个版本是HEAD^,以此类推�
     14. git remote -v 查看远程库信息
 
     15. git clone 地址
-
-
+    
     ## 创建与合并分支
-
+    
     一开始只有一条时间线，git用master指向最新的提交，再用HEAD指向master,就能确定当前分支，以及当前分支的提交点。
-
+    
     ![master](git笔记.assets/master.png)
-
+    
     当创建新的分支dev时，git创建了指针叫dev,指向master相同的提交，再把HEAD指向dev。
 
-    ```
+
     $ git switch -c dev
     Switch to a new branch 'dev'
     //-c参数表示创建并切换
-    
-    
-    相当于
+
+
+​    相当于
     $git branch dev         //创建分支
     $git switch dev       //切换分支
-    
-    
+
+
+​    
     然后用git branch命令查看当前分支
     $git branch
     * dev
       master
     ```
 
-    
 
-    
+​    
 
-    ![dev](git笔记.assets/dev.png)
+​                                   ![dev](git笔记.assets/dev.png)
 
-    不过现在开始，对工作区的修改和提交就是针对dev分支了，而master指针不变：
+不过现在开始，对工作区的修改和提交就是针对dev分支了，而master指针不变：
 
-    ![dev和master](git笔记.assets/dev和master.png)
+![dev和master](git笔记.assets/dev和master.png)
 
-    假如我们在dev上工作完成并提交，就可以把dev合并到master上,合并完后，甚至可以删除dev分支:
+假如我们在dev上工作完成并提交，就可以把dev合并到master上,合并完后，甚至可以删除dev分支:
 
-    ```
     $git merge dev           //把master和dev分支合并
     Updating d46f35e..b17d20e
     Fast-forward
      readme.txt | 1 +
      1 file changed, 1 insertion(+)
-    git merge命令用于合并指定分支到当前分支，
-    ```
 
-    > `Fast-forward`信息，git告诉我们，这次合并是“快进模式”，所以合并速度非常快。
-    >
-    > 当然也不是每次合并都能`Fast-forward`
+git merge命令用于合并指定分支到当前分支，
+> `Fast-forward`信息，git告诉我们，这次合并是“快进模式”，所以合并速度非常快。
+>
+> 当然也不是每次合并都能`Fast-forward`
 
-    ```
-    $git branch -d dev
-    可以删除dev分支
-    ```
+```
+$git branch -d dev
+可以删除dev分支
+```
 
-    当master和feature1各自都有新的提交时：
+​    ![并行创建](git笔记.assets/并行创建.png)
 
-    ![并行创建](git笔记.assets/并行创建.png)
+当master和feature1各自都有新的提交时：
+这种情况下，git无法快速合并，只能试图手动把各自的修改合并起来再提交。
 
-    这种情况下，git无法快速合并，只能试图手动把各自的修改合并起来再提交。
+```
+$git status 也告诉我们有冲突的文件
 
-    ```
-    $git status 也告诉我们有冲突的文件
-    ```
+通常，合并分支时，如果可能，git会用`Fast forward`模式，但这种模式下，删除分支后，会丢掉分支信息。
+```
 
-    通常，合并分支时，如果可能，git会用`Fast forward`模式，但这种模式下，删除分支后，会丢掉分支信息。
+若要强制使用该模式，会在merge时生成一个新的commit,这样，从分支历史上就可以看出分支信息。(而`Fast forward`合并就看不出来曾经做过合并)
 
-    若要强制使用该模式，会在merge时生成一个新的commit,这样，从分支历史上就可以看出分支信息。(而`Fast forward`合并就看不出来曾经做过合并)
+```
+$git merge -no-ff -m "注释" dev
+参数--no-ff 表示禁用Fast forward
+因为本次合并要创建一个新的commit,所以加上-m参数
+```
 
-    ```
-    $git merge -no-ff -m "注释" dev
-    参数--no-ff 表示禁用Fast forward
-    因为本次合并要创建一个新的commit,所以加上-m参数
-    
-    ```
 
-    
 
 ## **分支策略
 
@@ -167,6 +162,7 @@ git reset --hard HEAD (当前版本是HEAD,上一个版本是HEAD^,以此类推�
 
     ```
     $git stash list				//查看stash列表
+    $git stash show 			//显示做了哪些改动，默认show第一个存储，如果要显示其他存储，后面加stash@{$num}
     方法1
     $git stash apply 			//恢复
     $git stash drop				//删除
@@ -185,8 +181,8 @@ git reset --hard HEAD (当前版本是HEAD,上一个版本是HEAD^,以此类推�
     $git branch
     * dev
       master
-    $git cherry-pick <commit-id>			//作用时复制特定的提交到当前分支
-    commit id用git reflog获得
+    $git cherry-pick <commit-id>			//作用是复制特定的提交到当前分支
+    commit id用git reflog获取
     
     ```
 
