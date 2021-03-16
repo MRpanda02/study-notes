@@ -39,7 +39,8 @@ int find(int line,int row)
 void place(int line,int total_lines)
 {
     if(line > total_lines){
-        print(total_lines);
+        //print(total_lines);
+        cont++;   
     }
     else{
         for(int j=1;j<=total_lines;j++){
@@ -57,7 +58,7 @@ int main()
     int num;                    //输入皇后的个数
     cout << "Please input the number of Queen:";
     cin >> num;
-    cout << "Use recursive backtrack algorithm to solve the problem of "<< num <<" Queens\n";
+    cout << "Using recursive backtrack algorithm to solve the problem of "<< num <<" Queens\n";
     start = clock();
     place(1,num);               //从第一行开始进行判断
     finish = clock();
