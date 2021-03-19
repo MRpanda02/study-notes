@@ -494,6 +494,28 @@ typedef 类型名 类型别名;
 
 w!(不懂)[![image-20210316212506701](C++随笔.assets/image-20210316212506701.png)
 
+9. "::"作用域符 双冒号
+
+::是作用域，运算符中等级最高，它分为3种：
+
+1. global scope(全局作用域符),用法(::name)
+2. class scope(类作用域符),用法(class:name)
+3. namespace scope(命名空间作用域符),用法（namespace::name)
+
+都是左关联，作用都是为了更明确的调用你想要的变量:
+
+作用域符号::的前面一般是类名称，后面一般是该类的成员名称
+
+```c++
+char zhou; //全局变量
+void leep()
+{
+    char zhou;  		//局部变量
+    zhou(局部变量) = zhou(局部变量)*zhou(局部变量);
+    ::zhou(全局变量) = ::zhou(全局变量)*::zhou(全局变量);
+}
+```
+
 
 
 
