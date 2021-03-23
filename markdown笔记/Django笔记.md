@@ -738,7 +738,7 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 
 # 登录处理
-def signin( request):
+def signin(request):
     # 从 HTTP POST 请求中获取用户名、密码参数
     userName = request.POST.get('username')
     passWord = request.POST.get('password')
@@ -810,7 +810,182 @@ pprint.pprint(response.json())
 
 - 在用户登录成功后，服务端就在数据库django_session表中创建一条记录
 
-    然后在该登录请求的HTTP响应信息中的HEADER字段Set- Cookie里填入sessionid数据
+    然后在该登录请求的HTTP响应信息中的HEADER字段Set-Cookie里填入sessionid数据
 
-    
+    类似这样
+
+    ```
+    Set-Cookie: sessionid=6qu1cuk8cxvtf4w9rjxeppexh2izy0hh
+    ```
+
+    根据http协议， 这个Set-Cookie字段的意思就是 要求前端将其中的数据存入 cookie中。 并且随后访问该服务端的时候， 在HTTP请求消息中必须带上 这些 cookie数据。
+
+    cookie 通常就是存储在客户端浏览器的一些数据。 服务端可以通过http响应消息 要求 浏览器存储 一些数据。
+
+    以后每次访问 同一个网站服务， 必须在HTTP请求中再带上 这些cookie里面的数据。
+
+    cookie数据由多个 键值对组成， 比如：
+
+    ```
+    sessionid=6qu1cuk8cxvtf4w9rjxeppexh2izy0hh
+    username=byhy
+    favorite=phone_laptop_watch
+    ```
+
+- 该用户的后续操作，触发的HTTP请求， 都会在请求头的**Cookie**字段带上前面说的sessionid 
+
+服务端接收到该请求后，只需要到django_session表中查看是否有该sessionid对应的记录，这样就可以判断这个请求是否是前面已经登录的用户发出的
+
+验证请求的cookie里面是否有session，并且检查session表，看看是否存在session_key为该sessionid的一条记录，该记录的数据字典是否包含了usertype为mgr的数据
+
+修改 `mgr/customer.py` 的dispatcher 函数，在前面加上如下代码
+
+```python
+    # 根据session判断用户是否是登录的管理员用户
+    if 'usertype' not in request.session:
+        return JsonResponse({
+            'ret': 302,
+            'msg': '未登录',
+            'redirect': '/mgr/sign.html'}, 
+            status=302)
+
+    if request.session['usertype'] != 'mgr' :
+        return JsonResponse({
+            'ret': 302,
+            'msg': '用户非mgr类型',
+            'redirect': '/mgr/sign.html'} ,
+            status=302)
+```
+
+# 13. 数据库表的关联
+
+3种关联方式：`一对多`，`一对一`，`多对多`
+
+13.1 一对多
+
+方法：用外键的方式关联
+
+![](Django笔记.assets/image-20210323202143595.png)
+
+```python
+#外键格式
+class tablename(models.Model):
+    typename = models.ForeignKey(关联表,on_delete=models.系统行为)
+```
+
+> 系统行为是当我们和该表关联的表中的记录时，系统如何处理该表的所对应的数据的选择：
+>
+> - CASCADE
+>
+>     删除主键记录和相应的外链表记录
+>
+>     比如，我们要删除客户张三，在删除了客户表中张三记录同时，也删除Order表中所有这个张三的订单记录
+>
+> - PROTECT
+>
+>     禁止删除记录
+>
+>     当要删除的关联表的数据与该表还有关联数据时，不得删除
+>
+> - SET_NULL
+>
+>     删除主键记录，并将外键记录中外键字段的值置为NULL（前提是外键字段要设置为值允许时null）
+
+## 13.2 一对一
+
+```python
+#外键设置格式
+class tablename(models.Model):
+	typename = models.OneToOneField(关联表,on_delete=models.PROTECT)
+```
+
+Django会在数据库中定义该字段为外键的同时，加上`unique=True`约束，表示在此表中，所有记录的该字段取值必须唯一，不能重复。
+
+## 13.3 多对多
+
+![](Django笔记.assets/image-20210323203100661.png)
+
+```python
+#外键设置格式
+class tablename(models.Model):
+	typename = models.ManyToManyField(关联表,on_delete=models.PROTECT)
+```
+
+指定tablename表和 另一张表的多对多关系， 其实Order表中并不会产生一个 叫 medicines 的字段。
+
+Order表和 Medicine表的多对多关系 是 **通过另外一张表**， 也就是 through 参数 指定的 OrderMedicine 表 来确定的。
+
+migrate的时候，Django会自动产生一张新表 （这里就是 common_typenametablename）来 实现 tablename表 和 另一张表之间的多对多的关系。
+
+# 14. ORM关联表、事务
+
+在 `models.py` 中定义这样的两个Model，对应两张表
+
+```python
+# 国家表
+class Country(models.Model):
+    name = models.CharField(max_length=100)
+
+# 学生表， country 字段是国家表的外键，形成一对多的关系
+class Student(models.Model):
+    name    = models.CharField(max_length=100)
+    grade   = models.PositiveSmallIntegerField()
+    country = models.ForeignKey(Country,
+                                on_delete=models.PROTECT)
+```
+
+然后，命令行中执行`python3 manage.py shell`，直接启动Django命令行，便于快速检验代码功能
+
+先输入如下代码，创建一些数据
+
+```python
+from common.models import *
+c1 = Country.objects.create(name='中国')
+c2 = Country.objects.create(name='美国')
+c3 = Country.objects.create(name='法国')
+Student.objects.create(name='白月', grade=1, country=c1)
+Student.objects.create(name='黑羽', grade=2, country=c1)
+Student.objects.create(name='大罗', grade=1, country=c1)
+Student.objects.create(name='真佛', grade=2, country=c1)
+Student.objects.create(name='Mike', grade=1, country=c2)
+Student.objects.create(name='Gus',  grade=1, country=c2)
+Student.objects.create(name='White', grade=2, country=c2)
+Student.objects.create(name='White', grade=2, country=c2)
+Student.objects.create(name='Napolen', grade=2, country=c3)
+```
+
+## 14.1 ORM对关联表的操作（正向）
+
+### <u>通过对象访问外键表</u>
+
+```python
+s1 = Student.objects.get(name='...')
+s1.country.name
+#显示s1所在的表的外键country相对应的关联表的name数据
+```
+
+### <u>根据外键表数据过滤</u>
+
+```python
+#显示在grade1的学生的所有信息
+Student.objects.filter(grade=1).values()
+#如果要筛选的条件中的数据存在于关联的数据表里
+#查找Student表中所有grade1中国学生
+#1.要查找两番，效率较低
+cn = Country.objects.get(name='中国')
+Student.object.filter(grade=1,country_id=cn.id).values()
+#2.只需到遍历一遍，效率高
+#values里可以指定需要现实的字段
+Student.object.filter(grade=1,country__name='中国').values()
+#想要重命名
+from django.db.models import F
+
+#annotate可以将表字段进行别名处理
+#前面是修改后的名字，后面是被修改的名字
+Studnet.objects.annotate(
+	countryname=F('country__name'),
+    studentname=F('name')
+	)\
+.filter(grade=1,countryname='中国').values('studentname','countryname')
+```
 
