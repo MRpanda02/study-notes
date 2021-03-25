@@ -973,7 +973,7 @@ Student.objects.filter(grade=1).values()
 #查找Student表中所有grade1中国学生
 #1.要查找两番，效率较低
 cn = Country.objects.get(name='中国')
-Student.object.filter(grade=1,country_id=cn.id).values()
+Student.object.filter(grade=1,country_id=cn.id).values()C
 #2.只需到遍历一遍，效率高
 #values里可以指定需要现实的字段
 Student.object.filter(grade=1,country__name='中国').values()
@@ -987,5 +987,66 @@ Studnet.objects.annotate(
     studentname=F('name')
 	)\
 .filter(grade=1,countryname='中国').values('studentname','countryname')
+```
+
+### <b>14.2 ORM对关联表的操作(反向)</b>
+
+如果获取了一个Country对象，如何访问到所有属于这个国家的学生呢？
+
+```py
+cn = Country.objects.get(name='中国')
+cn.student_set.all()
+```
+
+通过 `表Model名转化为小写` ，后面加上一个 `_set` 来获取所有的反向外键关联对象
+
+还可以更直观的反映关联关系
+
+在定义Model的时候，外键字段使用`related_name`参数
+
+就可以使用更直观的属性名
+
+```c++
+cn = Country.objects.get(name='中国')
+cn.students.all()
+```
+
+### 14.2.1 反向过滤
+
+如果要获得所有具有一年级学生的国家名
+
+```python
+#先获得所有的一年级学生的id列表
+country_ids=Student.objects.filter(grade=1).values_list('country',falt=True)
+#再通过id列表使用id__in过滤
+Country.objects.filter(id__in=country_ids).values()
+```
+
+但是这样存在麻烦和性能问题
+
+Django ORM 可以这样写
+
+```python
+Country.objects.filter(students__grade=1).values()
+```
+
+注意， 因为，我们定义表的时候，用 `related_name='students'` 指定了反向关联名称 `students` ，所以这里是 `students__grade` 。 使用了反向关联名字。
+
+如果没有指定方向关联名， 则应该使用 `表名转化为小写` ，就是这样
+
+```python
+Country.objects.filter(student__grade=1).values()
+```
+
+但是，我们发现，这种方式，会有重复的记录产生，如下
+
+```python
+<QuerySet [{'id': 1, 'name': '中国'}, {'id': 1, 'name': '中国'}, {'id': 2, 'name': '美国'}, {'id': 2, 'name': '美国'}]>
+```
+
+可以使用 `.distinct()` 去重
+
+```python
+Country.objects.filter(students__grade=1).values().distinct()
 ```
 
