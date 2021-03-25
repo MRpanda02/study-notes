@@ -178,7 +178,7 @@ python3 manage.py migrate
 #真正去数据库创建表(作用相当于git commit)
 ```
 
-5. # Django Admin 管理数据
+# 5. Django Admin 管理数据
 
 Django提供了一个管理员操作界面可以方便的 添加、修改、删除你定义的 model 表数据。
 
@@ -209,7 +209,7 @@ admin.site.register(Customer)
 
 
 
-6. # 读区数据库数据
+6. # 读取数据库数据
 
 ## 6.1 查询所有记录 
 
@@ -230,7 +230,7 @@ def listcustomers(request):
 
     # 定义返回字符串
     retStr = ''
-    for customer in  qs:
+    for customer in qs:
         for name,value in customer.items():
             retStr += f'{name} : {value} | '
 
@@ -907,8 +907,16 @@ Django会在数据库中定义该字段为外键的同时，加上`unique=True`�
 
 ```python
 #外键设置格式
-class tablename(models.Model):
-	typename = models.ManyToManyField(关联表,on_delete=models.PROTECT)
+Django是通过 ManyToManyField 对象 表示 多对多的关系的。
+import datetime
+class Order(models.Model):
+    # 订单购买的药品，和Medicine表是多对多 的关系
+    medicines = models.ManyToManyField(Medicine, through='OrderMedicine')
+class OrderMedicine(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    medicine = models.ForeignKey(Medicine, on_delete=models.PROTECT)
+    # 订单中药品的数量
+    amount = models.PositiveIntegerField()
 ```
 
 指定tablename表和 另一张表的多对多关系， 其实Order表中并不会产生一个 叫 medicines 的字段。
