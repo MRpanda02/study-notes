@@ -101,5 +101,52 @@ for(int row = 0;row < r;row++){
 
 # 5. 图像像素的算术操作
 
+```c++
+Mat dst;
+dst = image * Scalar(50,50,50);		//加减除都可以
+//乘法操作
+Mat m = Scalar(2,2,2);
+multiply(image,m,dst);
+imshow("乘法",dst);
 
+//加法的本质操作
+int w = image.cols;
+    int h = inage.rows;
+    int dims = image.channels();
+    for(int row = 0;row < r;row++){
+        for(int col = 0;col < w;col++){
+            Vec3b p1 = image.at<Vec3b>(row,col);
+            Vec3b p2 = m.at<Vec3b>(row,col);
+            dst.at<Vec3b>(row,col)[0] = saturate_cast<uchar(>p1[0] - p2[0]);		//放置溢出
+            dst.at<Vec3b>(row,col)[1] = saturate_cast<uchar(p1[1] - p2[1]);
+            dst.at<Vec3b>(row,col)[2] = saturate_cast<uchar(p1[2] - p2[2]);
+        }
+        }
+//加减乘除现成函数,dst为容器
+add(image,m,dst);
+substract(image,m,dst);
+divide(image,m,dst);
+multiply(image,m,dst);
+```
 
+# 6. 滚动条操作演示-调整图像亮度
+
+TrackBar(滚动条操作)
+
+**static void on_track(int, void*) 为固定格式**
+
+# 7. 滚动条操作演示-参数传递度
+
+```c++
+void cv::addWeighted(cv::InputArray src1, double alpha, cv::InputArray src2, double beta, double gamma, cv::OutputArray dst, int dtype = -1)
+公式：
+dst = src1*alpha+src2*beta+gamma;
+```
+
+# 8. 键盘相应操作
+
+```C++
+waitKey(等待时间);
+```
+
+# 9. openCV自带颜色表操作s
