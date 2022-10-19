@@ -1,3 +1,2 @@
 I'm MoonChoDoung
-motherfucker
-fatherfucker
+I'm Chinese
